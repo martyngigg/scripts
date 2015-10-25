@@ -1,0 +1,51 @@
+#!/bin/bash
+#
+# Script to convert .m4a files to .mp3 files using avconv.
+# The bitrate is lowered to 128 kb/s as it shouldn't have
+# much of a noticable effect on the quality
+#
+MP3_EXT=.mp3
+# avconv wants this in bits/s
+BITRATE=128000
+
+# -------------------- Functions -----------------------
+show_usage() {
+    echo "usage: $0 [file list]"
+    echo ""
+    echo "The output file will have the same name but with the $MP3_EXT extension"
+    exit 0
+}
+
+fatal_error() {
+    echo "$*"
+    exit 1
+}
+
+# Convert a single file
+# @param $1 The path to the input file
+# @param $2 The artist metadata
+# @param $3 The album title metadata
+convert_file() {
+    input="$1"
+    artist="$2"
+    album="$3"
+    outputdir=$(dirname "$input")
+    input_file=$(basename "$input")
+    input_ne="${input_file%.*}"
+    output=${outputdir}/${input_ne}${MP3_EXT}
+
+    echo "Converting $input to mp3..."
+    $AVCONV -y -i "$input" -b $BITRATE "$output"
+}
+
+# --------------------- Main ---------------------------
+AVCONV=$(which avconv)
+if [ -z "$AVCONV" ]; then
+    fatal_error avconv not installed
+fi
+
+if [ $# = 0 ]; then
+    show_usage
+else
+    convert_file "$1"
+fi
