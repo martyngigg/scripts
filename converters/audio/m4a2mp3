@@ -5,14 +5,20 @@
 # much of a noticable effect on the quality
 #
 MP3_EXT=.mp3
+MP4_EXT=.m4a
 # avconv wants this in bits/s
 BITRATE=128000
+# Artist metadata
+ARTIST_TAG="Oxford City Singers"
 
 # -------------------- Functions -----------------------
 show_usage() {
-    echo "usage: $0 [file list]"
+    echo "usage: $0 [album name] [file]"
     echo ""
-    echo "The output file will have the same name but with the $MP3_EXT extension"
+    echo "Arguments that contain spaces need to be quoted."
+    echo "The output file will have the same name but with the $MP3_EXT extension."
+    echo ""
+    echo "To batch convert multiple files use: find . -name '*${MP4_EXT}' -exec ${0} \"{}\""
     exit 0
 }
 
@@ -29,13 +35,16 @@ convert_file() {
     input="$1"
     artist="$2"
     album="$3"
+
     outputdir=$(dirname "$input")
     input_file=$(basename "$input")
     input_ne="${input_file%.*}"
     output=${outputdir}/${input_ne}${MP3_EXT}
 
     echo "Converting $input to mp3..."
-    $AVCONV -y -i "$input" -b $BITRATE "$output"
+    $AVCONV -y -i "$input" -b $BITRATE \
+      -metadata artist="$artist" -metadata album="$album" \
+      "$output"
 }
 
 # --------------------- Main ---------------------------
@@ -44,8 +53,10 @@ if [ -z "$AVCONV" ]; then
     fatal_error avconv not installed
 fi
 
-if [ $# = 0 ]; then
-    show_usage
+if [ $# == 2 ]; then
+    input="$2"
+    album="$1"
+    convert_file "$input" "$ARTIST_TAG" "$album"
 else
-    convert_file "$1"
+    show_usage
 fi
