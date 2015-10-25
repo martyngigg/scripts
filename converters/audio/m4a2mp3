@@ -18,7 +18,7 @@ show_usage() {
     echo "Arguments that contain spaces need to be quoted."
     echo "The output file will have the same name but with the $MP3_EXT extension."
     echo ""
-    echo "To batch convert multiple files use: find . -name '*${MP4_EXT}' -exec ${0} \"{}\""
+    echo "To batch convert multiple files use: find . -name '*${MP4_EXT}' -exec ${0} \"{}\" \;"
     exit 0
 }
 
