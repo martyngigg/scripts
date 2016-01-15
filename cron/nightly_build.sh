@@ -3,9 +3,14 @@
 # Quick script to build mantid everynight
 #
 #
+LOCAL_DATA_STORE=/mnt/data1/ExternalData/LocalObjectStore
+PARAVIEW_DIR=/mnt/data1/builds/paraview/ParaView-v5.0.0
+CM_GENERATOR=Ninja
+
 # Run cmake and build.
 run_build() {
-    timeit "CMake time:" cmake -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo -DMANTID_DATA_STORE=/mnt/data1/ExternalData/LocalObjectStore -DMAKE_VATES=ON -DParaView_DIR=/mnt/data1/Code/ParaView-v4.3.b40280-source/build/ParaView-4.3.b40280 ../../Code/Mantid
+    _build_type=$1
+    timeit "CMake time:" cmake -G ${CM_GENERATOR} -DCMAKE_BUILD_TYPE=${_build_type} -DMANTID_DATA_STORE=${LOCAL_DATA_STORE} -DMAKE_VATES=ON -DParaView_DIR=${PARAVIEW_DIR} ../..
     timeit "Build time (no tests):" ninja
     timeit "Test build time:" ninja AllTests
 }
@@ -32,6 +37,7 @@ echo "********* Updating master *********"
 # Update code
 cd ${MASTER_ROOT}
 git fetch -p
+git reset HEAD
 git checkout master
 git reset --hard origin/master
 echo "*****************************************"
@@ -48,8 +54,6 @@ echo "Previous build of master: ${PREV_HEAD}"
 CURRENT_HEAD=`git rev-parse HEAD`
 echo "Current HEAD: ${CURRENT_HEAD}"
 if [ "$CURRENT_HEAD" != "$PREV_HEAD"  ]; then
-#	echo "****** Removing all iostream refs from headers ******"
-#	patch -p1 < $HOME/Desktop/rm_iostream_headers.patch
 	echo "****** Building ******"
 	if [ ! -d builds ]; then
 	    mkdir builds
@@ -57,7 +61,11 @@ if [ "$CURRENT_HEAD" != "$PREV_HEAD"  ]; then
 	cd ${MASTER_ROOT}/builds
 	rm -Rf relwithdbg
 	mkdir relwithdbg && cd relwithdbg
-	timeit "Total build time:" run_build
+	ts_1=`date +%s`
+	run_build RelWithDebInfo
+	ts_2=`date +%s`
+	echo
+	echo "Total build time:" `expr $ts_2 - $ts_1` seconds
 	echo "*****************************************"
 else
         echo "Current sha1 matches previous build - no build required."
